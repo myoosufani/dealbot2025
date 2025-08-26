@@ -1,5 +1,14 @@
-- name: Send test message
-  run: |
-    curl -H "Content-Type: application/json" \
-    -d '{"content": "✅ Dealbot is connected to Discord!"}' \
-    ${{ secrets.DISCORD_WEBHOOK }}
+name: Test Discord Notification
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send test message
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "✅ Dealbot is connected to Discord!"}' \
+          ${{ secrets.DISCORD_WEBHOOK }}
