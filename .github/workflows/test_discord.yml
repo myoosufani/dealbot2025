@@ -1,11 +1,5 @@
-name: Hello World
-
-on:
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Say hello
-        run: echo "Hello, GitHub Actions!"
+- name: Send test message
+  run: |
+    curl -H "Content-Type: application/json" \
+    -d '{"content": "✅ Dealbot is connected to Discord!"}' \
+    ${{ secrets.DISCORD_WEBHOOK }}
