@@ -1,14 +1,13 @@
 name: DealBot Scraper
 
 on:
-  workflow_dispatch:        # allows manual trigger
+  workflow_dispatch:        # run manually
   schedule:
-    - cron: '0 9 * * *'    # runs daily at 9:00 UTC
+    - cron: '*/60 * * * *'  # every 60 minutes (UTC) — adjust as you like
 
 jobs:
   scraper:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -23,8 +22,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run scraper
+      - name: Run DealBot scraper
         run: |
           python dealbot/scraper.py
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Upload CSV artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+            name: dealbot-csv
+            path: |
+              scrape_raw.csv
+              deals.csv
+            if-no-files-found: ignore
