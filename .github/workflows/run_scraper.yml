@@ -1,0 +1,30 @@
+name: DealBot Scraper
+
+on:
+  workflow_dispatch:        # allows manual trigger
+  schedule:
+    - cron: '0 9 * * *'    # runs daily at 9:00 UTC
+
+jobs:
+  scraper:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run scraper
+        run: |
+          python dealbot/scraper.py
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
