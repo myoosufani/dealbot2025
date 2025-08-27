@@ -1,66 +1,28 @@
-# dealbot/scraper.py
-
+import os
 import requests
 from bs4 import BeautifulSoup
-import pandas as pd
-import os
 
-# Discord webhook from GitHub secrets
-DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK")
-
-# List of products to track
-# Replace 'url' with real product pages
-products = [
-    {"name": "PlayStation 5", "url": "https://www.kijiji.ca/v-playstation5-link", "price_selector": ".price"}, 
-    {"name": "iPhone 15", "url": "https://www.kijiji.ca/v-iphone15-link", "price_selector": ".price"}
-]
-
-deals = []
-
-for product in products:
-    try:
-        response = requests.get(product["url"], headers={"User-Agent": "Mozilla/5.0"})
-        response.raise_for_status()
-    except requests.RequestException:
-        print(f"Failed to fetch {product['name']}")
-        continue
-
+def scrape_example():
+    url = "https://books.toscrape.com/"  # example site, replace later with your real one
+    response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
-    price_tag = soup.select_one(product["price_selector"])
 
-    if not price_tag:
-        print(f"Price not found for {product['name']}")
-        continue
+    # Example: get first 5 book titles
+    books = [book.get_text() for book in soup.select(".product_pod h3 a")[:5]]
+    return books
 
-    # Clean price string and convert to float
-    price_text = price_tag.text.replace("$", "").replace(",", "").strip()
-    try:
-        price = float(price_text)
-    except ValueError:
-        print(f"Invalid price for {product['name']}: {price_text}")
-        continue
+def notify_discord(message: str):
+    webhook_url = os.environ.get("DISCORD_WEBHOOK")
+    if not webhook_url:
+        print("⚠️ No Discord webhook found")
+        return
 
-    # Define your "price glitch" threshold
-    threshold = 50  # change this per product if needed
-    if price < threshold:
-        deals.append({"name": product["name"], "price": price, "url": product["url"]})
+    data = {"content": message}
+    requests.post(webhook_url, json=data)
 
-# Save deals to CSV
-if deals:
-    df = pd.DataFrame(deals)
-    df.to_csv("deals.csv", index=False)
-    print(f"Found {len(deals)} deal(s), saved to deals.csv")
-
-    # Send Discord notification
-    if DISCORD_WEBHOOK:
-        import requests
-        message = "💰 Killer Deals Found:\n" + "\n".join(
-            [f"{d['name']} - ${d['price']} - {d['url']}" for d in deals]
-        )
-        try:
-            requests.post(DISCORD_WEBHOOK, json={"content": message})
-            print("Discord notification sent!")
-        except requests.RequestException:
-            print("Failed to send Discord notification")
-else:
-    print("No deals found today.")
+if __name__ == "__main__":
+    deals = scrape_example()
+    if deals:
+        notify_discord("📢 New deals found:\n" + "\n".join(deals))
+    else:
+        notify_discord("No deals found today.")
